@@ -1,0 +1,16 @@
+name: DrakesCrates
+version: 1.0
+main: me.jackstar.drakescrates.DrakesCratesPlugin
+api-version: '1.20'
+authors: [JackStar]
+description: Crates system for DrakesCraft
+softdepend: [PlaceholderAPI]
+commands:
+  drakescrates:
+    description: Admin command for DrakesCrates
+    usage: /drakescrates <givekey|editor|reload>
+    permission: drakescrates.admin
+permissions:
+  drakescrates.admin:
+    description: Allows use of DrakesCrates admin command
+    default: op

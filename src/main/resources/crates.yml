@@ -1,0 +1,76 @@
+# Definición de llaves y cajas de DrakesCrates.
+# Este archivo se usa tanto para gameplay como para editor in-game.
+#
+# [DANGER] Si cambias IDs (keys/crates/rewards), revisa comandos y ubicaciones.
+# [DANGER] Chances <= 0 desactivan el reward.
+
+keys:
+  basic_key:
+    # Nombre visible de la llave (MiniMessage).
+    display-name: "<gold><b>Basic Key</b></gold>"
+    item:
+      # Material del item físico de llave.
+      material: TRIPWIRE_HOOK
+      amount: 1
+      name: "<yellow>Basic Key"
+      lore:
+        - "<gray>Use this key to open"
+        - "<gray>the Basic Crate."
+      enchantments:
+        unbreaking: 1
+      custom-model-data: 1001
+
+crates:
+  basic:
+    # Nombre de crate en menús/feedback.
+    display-name: "<gradient:gold:yellow><b>Basic Crate</b></gradient>"
+    # Tipos: PHYSICAL_KEY, VIRTUAL_KEY, FREE
+    type: PHYSICAL_KEY
+    # Key requerida si type = PHYSICAL_KEY
+    key-id: basic_key
+    preview-item:
+      material: CHEST
+      amount: 1
+      name: "<gold>Basic Crate"
+      lore:
+        - "<gray>Contains common rewards."
+    locations:
+      # Formato: world,x,y,z[,yaw,pitch]
+      - "world,0,64,0"
+    rewards:
+      coins:
+        display-name: "<yellow>Coins Reward"
+        chance: 60.0
+        commands:
+          - "eco give %player% 250"
+        display-item:
+          material: GOLD_NUGGET
+          amount: 8
+          name: "<yellow>250 Coins"
+          lore:
+            - "<gray>Common economy reward."
+      diamond_pack:
+        display-name: "<aqua>Diamond Pack"
+        chance: 35.0
+        commands:
+          - "give %player% diamond 5"
+        display-item:
+          material: DIAMOND
+          amount: 5
+          name: "<aqua>Diamond Pack"
+          lore:
+            - "<gray>Useful crafting reward."
+      legendary_pickaxe:
+        display-name: "<rainbow>Legendary Pickaxe"
+        chance: 5.0
+        commands:
+          - "give %player% netherite_pickaxe 1"
+        display-item:
+          material: NETHERITE_PICKAXE
+          amount: 1
+          name: "<rainbow>Legendary Pickaxe"
+          lore:
+            - "<gray>Rare jackpot reward."
+          enchantments:
+            EFFICIENCY: 5
+            UNBREAKING: 3

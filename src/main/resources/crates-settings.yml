@@ -1,0 +1,10 @@
+roulette:
+  # Tiempo en ticks entre cada movimiento de la ruleta.
+  # Recomendado: 2-5.
+  # [DANGER] Menos de 1 puede causar lag y glitches visuales.
+  tick-speed: 2
+
+  # Cantidad total de "pasos" antes de que se detenga la ruleta.
+  # Recomendado: 40-80.
+  # Valores muy altos alargan la animación demasiado.
+  total-steps: 50
