@@ -10,6 +10,7 @@ commands:
     description: Admin command for DrakesCrates
     usage: /drakescrates <givekey|editor|reload>
     permission: drakescrates.admin
+    aliases: [dcrate, dcrates, drcrate]
 permissions:
   drakescrates.admin:
     description: Allows use of DrakesCrates admin command
