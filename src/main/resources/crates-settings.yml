@@ -1,10 +1,10 @@
 roulette:
-  # Tiempo en ticks entre cada movimiento de la ruleta.
-  # Recomendado: 2-5.
-  # [DANGER] Menos de 1 puede causar lag y glitches visuales.
+  # Time in ticks between each roulette move.
+  # Recommended: 2-5.
+  # [DANGER] Values below 1 can create lag and visual glitches.
   tick-speed: 2
 
-  # Cantidad total de "pasos" antes de que se detenga la ruleta.
-  # Recomendado: 40-80.
-  # Valores muy altos alargan la animación demasiado.
+  # Total amount of spin steps before stopping.
+  # Recommended: 40-80.
+  # [DANGER] Very high values make animations too long for players.
   total-steps: 50

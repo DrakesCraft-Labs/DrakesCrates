@@ -46,6 +46,14 @@ public class DrakesCratesPlaceholderExpansion extends PlaceholderExpansion {
             return String.valueOf(countPhysicalKeys(player));
         }
 
+        if (params.toLowerCase().startsWith("keys_")) {
+            String keyId = params.substring("keys_".length());
+            if (keyId.isBlank()) {
+                return "0";
+            }
+            return String.valueOf(countPhysicalKeys(player, keyId));
+        }
+
         return null;
     }
 
@@ -60,6 +68,25 @@ public class DrakesCratesPlaceholderExpansion extends PlaceholderExpansion {
                 if (stack.isSimilar(target)) {
                     count += stack.getAmount();
                 }
+            }
+        }
+        return count;
+    }
+
+    private int countPhysicalKeys(Player player, String keyId) {
+        Key key = crateRepository.findKeyById(keyId).orElse(null);
+        if (key == null) {
+            return 0;
+        }
+
+        int count = 0;
+        ItemStack target = key.getItem();
+        for (ItemStack stack : player.getInventory().getContents()) {
+            if (stack == null || stack.getType().isAir()) {
+                continue;
+            }
+            if (stack.isSimilar(target)) {
+                count += stack.getAmount();
             }
         }
         return count;

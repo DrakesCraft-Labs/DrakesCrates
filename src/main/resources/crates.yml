@@ -1,15 +1,14 @@
-# Definición de llaves y cajas de DrakesCrates.
-# Este archivo se usa tanto para gameplay como para editor in-game.
-#
-# [DANGER] Si cambias IDs (keys/crates/rewards), revisa comandos y ubicaciones.
-# [DANGER] Chances <= 0 desactivan el reward.
+# DrakesCrates main config.
+# This file defines keys, crates, locations, and rewards.
+# [DANGER] If you change IDs (key/crate/reward), update commands and integrations.
+# [DANGER] Reward chances <= 0 effectively disable the reward.
 
 keys:
   basic_key:
-    # Nombre visible de la llave (MiniMessage).
+    # Visible key name (MiniMessage).
     display-name: "<gold><b>Basic Key</b></gold>"
     item:
-      # Material del item físico de llave.
+      # Material for the physical key item.
       material: TRIPWIRE_HOOK
       amount: 1
       name: "<yellow>Basic Key"
@@ -18,28 +17,38 @@ keys:
         - "<gray>the Basic Crate."
       enchantments:
         unbreaking: 1
+      # Optional model for resource packs.
       custom-model-data: 1001
 
 crates:
   basic:
-    # Nombre de crate en menús/feedback.
+    # Crate display name used in UIs and messages.
     display-name: "<gradient:gold:yellow><b>Basic Crate</b></gradient>"
-    # Tipos: PHYSICAL_KEY, VIRTUAL_KEY, FREE
+
+    # Crate access mode: PHYSICAL_KEY, VIRTUAL_KEY, FREE.
     type: PHYSICAL_KEY
-    # Key requerida si type = PHYSICAL_KEY
+
+    # Required key id when type = PHYSICAL_KEY.
     key-id: basic_key
+
+    # Item used in selector/editor and crate references.
     preview-item:
       material: CHEST
       amount: 1
       name: "<gold>Basic Crate"
       lore:
         - "<gray>Contains common rewards."
+
     locations:
-      # Formato: world,x,y,z[,yaw,pitch]
+      # Format: world,x,y,z[,yaw,pitch]
+      # [DANGER] Invalid world name = crate unusable at runtime.
       - "world,0,64,0"
+
     rewards:
       coins:
         display-name: "<yellow>Coins Reward"
+        # Win chance in percentage-like weight.
+        # [DANGER] Keep total distribution balanced for economy health.
         chance: 60.0
         commands:
           - "eco give %player% 250"
@@ -49,6 +58,7 @@ crates:
           name: "<yellow>250 Coins"
           lore:
             - "<gray>Common economy reward."
+
       diamond_pack:
         display-name: "<aqua>Diamond Pack"
         chance: 35.0
@@ -60,6 +70,7 @@ crates:
           name: "<aqua>Diamond Pack"
           lore:
             - "<gray>Useful crafting reward."
+
       legendary_pickaxe:
         display-name: "<rainbow>Legendary Pickaxe"
         chance: 5.0

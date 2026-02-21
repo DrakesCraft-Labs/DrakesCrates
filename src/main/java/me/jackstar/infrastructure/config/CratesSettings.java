@@ -36,7 +36,7 @@ public class CratesSettings {
     }
 
     private void saveDefault() {
-        if (plugin.getResource("crates-settings.yml") != null) {
+        if (!file.exists() && plugin.getResource("crates-settings.yml") != null) {
             plugin.saveResource("crates-settings.yml", false);
             return;
         }

@@ -177,7 +177,14 @@ public class CrateEditorManager implements Listener {
         }
 
         MessageUtils.send(player, "<green>Updated <yellow>" + reward.getId() + "</yellow> chance to <gold>" + newChance + "%</gold>.</green>");
-        crateRepository.findCrateById(crate.getId()).ifPresent(refreshed -> openRewardEditor(player, refreshed));
+        crateRepository.findCrateById(crate.getId()).ifPresent(refreshed -> {
+            double total = refreshed.getRewards().stream().mapToDouble(Reward::getChance).sum();
+            if (total < 99.0D || total > 101.0D) {
+                MessageUtils.send(player, "<yellow>Warning:</yellow> total crate chance is <gold>" + String.format(Locale.US, "%.2f", total)
+                        + "%</gold>. Recommended around 100% for predictable balance.");
+            }
+            openRewardEditor(player, refreshed);
+        });
     }
 
     @EventHandler

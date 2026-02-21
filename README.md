@@ -12,6 +12,8 @@ Gestionar cajas de premios con llaves fisicas, ruleta visual y edicion de probab
 - Editor GUI para ajustar `chance` por reward.
 - Preview pasivo al click izquierdo en el bloque de crate.
 - PlaceholderAPI: `%drakescrates_keys_physical%`.
+- PlaceholderAPI por llave: `%drakescrates_keys_<key_id>%` (ej: `%drakescrates_keys_basic_key%`).
+- Recarga runtime de `crates.yml` y `crates-settings.yml` con `/drakescrates reload`.
 
 ## Arquitectura heredada del Core
 - `application/`: casos de uso y repositorio.
@@ -29,6 +31,4 @@ Gestionar cajas de premios con llaves fisicas, ruleta visual y edicion de probab
 - PlaceholderAPI (opcional)
 
 ## Pendiente real
-- Placeholders por `key-id` (no solo total global).
-- `reload` que recargue tambien `crates-settings.yml` en runtime.
-- Guardrails para evitar distribuciones de chance mal balanceadas.
+- Reportes/export de configuracion para auditoria de economia.

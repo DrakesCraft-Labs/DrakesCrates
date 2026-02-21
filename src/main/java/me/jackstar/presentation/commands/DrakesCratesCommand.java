@@ -16,10 +16,12 @@ public class DrakesCratesCommand implements CommandExecutor {
 
     private final CrateRepository crateRepository;
     private final CrateEditorManager crateEditorManager;
+    private final Runnable reloadAction;
 
-    public DrakesCratesCommand(CrateRepository crateRepository, CrateEditorManager crateEditorManager) {
+    public DrakesCratesCommand(CrateRepository crateRepository, CrateEditorManager crateEditorManager, Runnable reloadAction) {
         this.crateRepository = crateRepository;
         this.crateEditorManager = crateEditorManager;
+        this.reloadAction = reloadAction;
     }
 
     @Override
@@ -36,7 +38,11 @@ public class DrakesCratesCommand implements CommandExecutor {
         }
 
         if ("reload".equalsIgnoreCase(args[0])) {
-            crateRepository.reload();
+            if (reloadAction != null) {
+                reloadAction.run();
+            } else {
+                crateRepository.reload();
+            }
             MessageUtils.send(sender, "<green>DrakesCrates reloaded successfully.</green>");
             return true;
         }
