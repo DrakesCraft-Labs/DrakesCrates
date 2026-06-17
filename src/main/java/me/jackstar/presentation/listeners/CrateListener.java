@@ -25,7 +25,7 @@ public class CrateListener implements Listener {
 
     private final CrateRepository crateRepository;
     private final OpenCrateUseCase openCrateUseCase;
-    private final CrateAnimation crateAnimation;
+    private CrateAnimation crateAnimation;
     private final CratePreviewManager cratePreviewManager;
 
     public CrateListener(CrateRepository crateRepository, OpenCrateUseCase openCrateUseCase,
@@ -34,6 +34,10 @@ public class CrateListener implements Listener {
         this.openCrateUseCase = openCrateUseCase;
         this.crateAnimation = crateAnimation;
         this.cratePreviewManager = cratePreviewManager;
+    }
+
+    public void setCrateAnimation(CrateAnimation crateAnimation) {
+        this.crateAnimation = crateAnimation;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -61,6 +65,11 @@ public class CrateListener implements Listener {
             return;
         }
 
+        if (crateAnimation.isOpening(player)) {
+            MessageUtils.send(player, "<red>You are already opening a crate.</red>");
+            return;
+        }
+
         ItemStack keyForValidation = null;
 
         if (crate.getType() == CrateType.PHYSICAL_KEY) {
@@ -83,11 +92,14 @@ public class CrateListener implements Listener {
             return;
         }
 
+        if (!crateAnimation.start(player, crate, result.getWinningReward())) {
+            MessageUtils.send(player, "<red>This crate could not be opened. Your key was not consumed.</red>");
+            return;
+        }
+
         if (crate.getType() == CrateType.PHYSICAL_KEY && keyForValidation != null) {
             consumeOneKey(keyForValidation);
         }
-
-        crateAnimation.start(player, crate, result.getWinningReward());
     }
 
     private ItemStack findMatchingKeyInInventory(Player player, Key key) {

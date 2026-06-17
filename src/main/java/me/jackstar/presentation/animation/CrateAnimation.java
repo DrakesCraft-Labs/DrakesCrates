@@ -6,5 +6,7 @@ import org.bukkit.entity.Player;
 
 public interface CrateAnimation {
 
-    void start(Player player, Crate crate, Reward winReward);
+    boolean start(Player player, Crate crate, Reward winReward);
+
+    boolean isOpening(Player player);
 }

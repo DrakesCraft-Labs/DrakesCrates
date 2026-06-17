@@ -53,19 +53,19 @@ public class RouletteAnimation implements CrateAnimation, Listener {
     }
 
     @Override
-    public void start(Player player, Crate crate, Reward winReward) {
+    public boolean start(Player player, Crate crate, Reward winReward) {
         if (player == null || crate == null || winReward == null) {
-            return;
+            return false;
+        }
+
+        if (isOpening(player)) {
+            MessageUtils.send(player, "<red>You are already opening a crate.</red>");
+            return false;
         }
 
         if (crate.getRewards() == null || crate.getRewards().isEmpty()) {
-            MessageUtils.send(player, "<red>This crate has no rewards configured.");
-            return;
-        }
-
-        Session previous = sessions.remove(player.getUniqueId());
-        if (previous != null) {
-            previous.cancelTask();
+            MessageUtils.send(player, "<red>This crate has no rewards configured.</red>");
+            return false;
         }
 
         Inventory inventory = Bukkit.createInventory(
@@ -79,6 +79,12 @@ public class RouletteAnimation implements CrateAnimation, Listener {
         Session session = new Session(player.getUniqueId(), inventory, crate, winReward);
         sessions.put(player.getUniqueId(), session);
         session.start();
+        return true;
+    }
+
+    @Override
+    public boolean isOpening(Player player) {
+        return player != null && sessions.containsKey(player.getUniqueId());
     }
 
     @EventHandler
@@ -172,7 +178,7 @@ public class RouletteAnimation implements CrateAnimation, Listener {
     private void dispatchRewardCommands(Player player, Reward reward) {
         List<String> commands = reward.getCommands();
         if (commands == null || commands.isEmpty()) {
-            player.getInventory().addItem(reward.getDisplayItem().clone());
+            giveRewardItem(player, reward.getDisplayItem().clone());
             MessageUtils.send(player, "<green>You won a reward item.");
             return;
         }
@@ -193,6 +199,16 @@ public class RouletteAnimation implements CrateAnimation, Listener {
 
     private String safeId(String id) {
         return id == null ? "crate" : id.toLowerCase(Locale.ROOT);
+    }
+
+    private void giveRewardItem(Player player, ItemStack item) {
+        Map<Integer, ItemStack> leftovers = player.getInventory().addItem(item);
+        if (leftovers.isEmpty()) {
+            return;
+        }
+
+        leftovers.values().forEach(leftover -> player.getWorld().dropItemNaturally(player.getLocation(), leftover));
+        MessageUtils.send(player, "<yellow>Your inventory was full, so part of the reward was dropped at your feet.</yellow>");
     }
 
     private final class Session {

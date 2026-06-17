@@ -28,6 +28,7 @@ public class DrakesCratesPlugin extends JavaPlugin {
     private CrateRepository crateRepository;
     private RouletteAnimation rouletteAnimation;
     private CrateEditorManager crateEditorManager;
+    private CrateListener crateListener;
     private CratesSettings cratesSettings;
 
     @Override
@@ -54,9 +55,8 @@ public class DrakesCratesPlugin extends JavaPlugin {
         }
 
         logLoading("Registering listeners");
-        getServer().getPluginManager().registerEvents(
-                new CrateListener(crateRepository, openCrateUseCase, rouletteAnimation, cratePreviewManager),
-                this);
+        crateListener = new CrateListener(crateRepository, openCrateUseCase, rouletteAnimation, cratePreviewManager);
+        getServer().getPluginManager().registerEvents(crateListener, this);
         getServer().getPluginManager().registerEvents(crateEditorManager, this);
         getServer().getPluginManager().registerEvents(cratePreviewManager, this);
 
@@ -85,6 +85,9 @@ public class DrakesCratesPlugin extends JavaPlugin {
             rouletteAnimation.shutdown();
         }
         rouletteAnimation = new RouletteAnimation(this, cratesSettings.getRouletteSteps(), cratesSettings.getRouletteTickSpeed());
+        if (crateListener != null) {
+            crateListener.setCrateAnimation(rouletteAnimation);
+        }
         getLogger().info("[Reload] DrakesCrates runtime reloaded.");
     }
 
