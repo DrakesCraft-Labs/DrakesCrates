@@ -94,7 +94,7 @@ public class DrakesCratesCommand implements CommandExecutor {
             return true;
         }
 
-        ItemStack keyItem = key.getItem();
+        ItemStack keyItem = key.getItem().clone();
         keyItem.setAmount(Math.min(amount, keyItem.getMaxStackSize()));
         int left = giveStacked(target, keyItem, amount);
 
