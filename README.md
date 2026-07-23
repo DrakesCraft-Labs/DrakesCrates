@@ -19,7 +19,7 @@ Gestionar cajas de premios con llaves fisicas, ruleta visual y edicion de probab
 - `application/`: casos de uso y repositorio.
 - `domain/`: `Crate`, `Reward`, `Key`, `OpenResult`.
 - `infrastructure/`: parser YAML y settings.
-- `presentation/`: comandos, listeners, editor, animacion.
+- `presentation/`: commands, listeners, editor, animacion.
 
 ## Configuracion
 - `src/main/resources/crates.yml`
