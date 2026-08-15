@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/DrakesCraft-Labs/DrakesCrates/master/banner.svg" width="100%" alt="DRAKES CRATES animated banner" />
+</p>
+
 # DrakesCrates
 
 Plugin de crates extraido desde el modulo `drakescrates` del antiguo `DrakesCore`.
@@ -32,3 +36,4 @@ Gestionar cajas de premios con llaves fisicas, ruleta visual y edicion de probab
 
 ## Pendiente real
 - Reportes/export de configuracion para auditoria de economia.
+
