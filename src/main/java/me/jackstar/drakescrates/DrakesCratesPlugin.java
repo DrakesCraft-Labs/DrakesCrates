@@ -10,6 +10,11 @@ import me.jackstar.drakescrates.presentation.commands.DrakesCratesCommand;
 import me.jackstar.drakescrates.presentation.editor.CrateEditorManager;
 import me.jackstar.drakescrates.presentation.editor.CratePreviewManager;
 import me.jackstar.drakescrates.presentation.listeners.CrateListener;
+import me.jackstar.drakescrates.oracle.OracleGuiService;
+import me.jackstar.drakescrates.oracle.OracleRepository;
+import me.jackstar.drakescrates.oracle.OracleService;
+import me.jackstar.drakescrates.oracle.OracleYamlRepository;
+import me.jackstar.drakescrates.oracle.OraculoCommand;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -30,6 +35,8 @@ public class DrakesCratesPlugin extends JavaPlugin {
     private CrateEditorManager crateEditorManager;
     private CrateListener crateListener;
     private CratesSettings cratesSettings;
+    private OracleRepository oracleRepository;
+    private OracleYamlRepository oracleYamlRepository;
 
     @Override
     public void onEnable() {
@@ -45,6 +52,11 @@ public class DrakesCratesPlugin extends JavaPlugin {
         rouletteAnimation = new RouletteAnimation(this, cratesSettings.getRouletteSteps(), cratesSettings.getRouletteTickSpeed());
         crateEditorManager = new CrateEditorManager(crateRepository);
         CratePreviewManager cratePreviewManager = new CratePreviewManager();
+        logLoading("Preparing El Oraculo");
+        oracleYamlRepository = new OracleYamlRepository(this);
+        oracleRepository = new OracleRepository(new File(getDataFolder(), "oracle.db"));
+        OracleService oracleService = new OracleService(oracleRepository, oracleYamlRepository);
+        OracleGuiService oracleGui = new OracleGuiService(this, oracleService, oracleYamlRepository);
 
         logLoading("Registering command executors");
         PluginCommand drakesCratesCommand = getCommand("drakescrates");
@@ -53,16 +65,19 @@ public class DrakesCratesPlugin extends JavaPlugin {
         } else {
             getLogger().warning("Command 'drakescrates' not found in plugin.yml.");
         }
+        PluginCommand oracleCommand = getCommand("oraculo");
+        if (oracleCommand != null) oracleCommand.setExecutor(new OraculoCommand(oracleService, oracleYamlRepository, oracleGui, this::reloadRuntime));
 
         logLoading("Registering listeners");
         crateListener = new CrateListener(crateRepository, openCrateUseCase, rouletteAnimation, cratePreviewManager);
         getServer().getPluginManager().registerEvents(crateListener, this);
         getServer().getPluginManager().registerEvents(crateEditorManager, this);
         getServer().getPluginManager().registerEvents(cratePreviewManager, this);
+        getServer().getPluginManager().registerEvents(oracleGui, this);
 
         logLoading("Registering PlaceholderAPI expansion if available");
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            new DrakesCratesPlaceholderExpansion(crateRepository).register();
+            new DrakesCratesPlaceholderExpansion(crateRepository, oracleRepository).register();
         }
 
         getLogger().info("[Ready] DrakesCrates enabled.");
@@ -80,6 +95,7 @@ public class DrakesCratesPlugin extends JavaPlugin {
     public void reloadRuntime() {
         crateRepository.reload();
         cratesSettings.reload();
+        if (oracleYamlRepository != null) oracleYamlRepository.reload();
 
         if (rouletteAnimation != null) {
             rouletteAnimation.shutdown();

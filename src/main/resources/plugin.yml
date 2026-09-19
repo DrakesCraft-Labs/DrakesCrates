@@ -6,6 +6,10 @@ authors: [JackStar]
 description: Crates system for DrakesCraft
 softdepend: [PlaceholderAPI]
 commands:
+  oraculo:
+    description: Abre El Oraculo y los Relicarios del Olimpo
+    usage: /oraculo [givekey|takekey|setpity|reclamar|reload]
+    aliases: [relicarios, crates]
   drakescrates:
     description: Admin command for DrakesCrates
     usage: /drakescrates <givekey|editor|reload>
