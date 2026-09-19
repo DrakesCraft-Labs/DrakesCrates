@@ -9,5 +9,6 @@ public final class OracleService {
     public void give(UUID id,String relicary,int count){validate(relicary);database.addKeys(id,relicary,count);} public boolean take(UUID id,String relicary,int count){validate(relicary);return database.takeKeys(id,relicary,count);} public void setPity(UUID id,String relicary,int count){validate(relicary);database.setPity(id,relicary,count);}
     public OracleRepository.Draw open(UUID id,String relicary){Relicary r=relicaries.get(relicary);if(r==null)throw new IllegalArgumentException("Relicario desconocido");return database.draw(id,r,random);}
     public void deliver(Player player,long claim){for(String command:database.claim(player.getUniqueId(),claim)){if(!command.isBlank()) Bukkit.dispatchCommand(Bukkit.getConsoleSender(),command.replace("%player%",player.getName()));}}
+    public int claimAll(Player player){List<List<String>> pending=database.claimAll(player.getUniqueId());for(List<String> commands:pending)for(String command:commands)if(!command.isBlank())Bukkit.dispatchCommand(Bukkit.getConsoleSender(),command.replace("%player%",player.getName()));return pending.size();}
     private void validate(String id){if(relicaries.get(id)==null)throw new IllegalArgumentException("Relicario desconocido: "+id);}
 }
