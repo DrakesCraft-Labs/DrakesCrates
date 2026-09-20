@@ -40,3 +40,17 @@ relicaries:
       caos: { name: "Fragmento del Caos", rarity: COMUN, weight: 65, material: AMETHYST_SHARD, commands: ["give %player% amethyst_shard 16"] }
       aura: { name: "Aura Titan", rarity: EPICO, weight: 30, material: ECHO_SHARD, commands: ["give %player% echo_shard 8"] }
       corona: { name: "Corona de los Titanes", rarity: DIVINO, weight: 5, material: NETHER_STAR, commands: ["give %player% nether_star 1"] }
+
+# De donde salen las llaves (ademas de /oraculo givekey y la tienda).
+key-sources:
+  votes:
+    enabled: true
+    relicary: hercules
+    keys: 1
+  bosses:
+    enabled: true
+    # entidades cuyo nombre visible contiene alguna de estas palabras (jefes de DrakesBosses/MultiverseCreatures)
+    name-contains: [jefe, boss, titan, "titán", hidra, minotauro, cerbero, kraken, dragon, "dragón", wither]
+    chance: 1.0
+    relicary: hefesto
+    keys: 1

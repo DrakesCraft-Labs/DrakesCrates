@@ -74,6 +74,8 @@ public class DrakesCratesPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(crateEditorManager, this);
         getServer().getPluginManager().registerEvents(cratePreviewManager, this);
         getServer().getPluginManager().registerEvents(oracleGui, this);
+        // fuentes de llaves del Oraculo: votos (Votifier) y jefes; ver key-sources en oracle.yml
+        new me.jackstar.drakescrates.oracle.KeySourcesListener(this, oracleService, () -> oracleYamlRepository.raw()).register();
 
         logLoading("Registering PlaceholderAPI expansion if available");
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {

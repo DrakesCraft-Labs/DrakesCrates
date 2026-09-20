@@ -16,6 +16,8 @@ public final class OracleYamlRepository {
             if (!rewards.isEmpty()) relicaries.put(id.toLowerCase(Locale.ROOT), new Relicary(id.toLowerCase(Locale.ROOT), s.getString("name", id), s.getString("key-name", "Ofrenda"), material(s.getString("material"), Material.ENDER_CHEST), List.copyOf(rewards))); }
     }
     private Material material(String value, Material fallback) { try { return Material.valueOf(value == null ? fallback.name() : value.toUpperCase(Locale.ROOT)); } catch (IllegalArgumentException ex) { return fallback; } }
+    /** oracle.yml completo (para secciones como key-sources). */
+    public YamlConfiguration raw() { return YamlConfiguration.loadConfiguration(new File(plugin.getDataFolder(), "oracle.yml")); }
     public Collection<Relicary> all() { return Collections.unmodifiableCollection(relicaries.values()); }
     public Relicary get(String id) { return relicaries.get(id.toLowerCase(Locale.ROOT)); }
 }
