@@ -1,10 +1,33 @@
+# ==============================================================
+#                 DRAKESCRATES SETTINGS
+# ==============================================================
+
 roulette:
-  # Time in ticks between each roulette move.
-  # Recommended: 2-5.
-  # [DANGER] Values below 1 can create lag and visual glitches.
+  # Tiempo en ticks entre cada paso de la ruleta (2-5 recomendado).
   tick-speed: 2
 
-  # Total amount of spin steps before stopping.
-  # Recommended: 40-80.
-  # [DANGER] Very high values make animations too long for players.
-  total-steps: 50
+  # Cantidad total de pasos de giro antes de frenar en el premio ganador.
+  total-steps: 45
+
+# Separación de modalidades y Restricciones Vainilla
+modalities:
+  # Mundos donde el juego es 100% Vainilla. En estos mundos cualquier
+  # crate o recompensa con Slimefun queda ESTRICTAMENTE bloqueada.
+  clasico-worlds:
+    - clasico
+    - clasico_nether
+    - clasico_the_end
+
+  # Mundos tecnológicos con Slimefun activo y permitido.
+  slimefun-worlds:
+    - bskyblock_world
+    - bskyblock_world_nether
+    - bskyblock_world_the_end
+    - oneblock
+    - survival_sf
+
+virtual-crates:
+  # Permitir abrir crates mediante el menú virtual /crates
+  enabled: true
+  # Si el jugador tiene llaves físicas en inventario, se consumen primero antes de las virtuales
+  prefer-physical-keys: true

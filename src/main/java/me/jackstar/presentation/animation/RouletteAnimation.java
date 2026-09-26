@@ -1,6 +1,7 @@
 package me.jackstar.drakescrates.presentation.animation;
 
 import me.jackstar.drakescraft.utils.MessageUtils;
+import me.jackstar.drakescrates.compat.SlimefunHook;
 import me.jackstar.drakescrates.domain.models.Crate;
 import me.jackstar.drakescrates.domain.models.Reward;
 import org.bukkit.Bukkit;
@@ -41,43 +42,32 @@ public class RouletteAnimation implements CrateAnimation, Listener {
     private final long tickPeriod;
     private final Map<UUID, Session> sessions = new ConcurrentHashMap<>();
 
-    public RouletteAnimation(JavaPlugin plugin) {
-        this(plugin, 50, 2L);
-    }
-
     public RouletteAnimation(JavaPlugin plugin, int totalSteps, long tickPeriod) {
         this.plugin = plugin;
-        this.totalSteps = Math.max(10, totalSteps);
+        this.totalSteps = Math.max(20, totalSteps);
         this.tickPeriod = Math.max(1L, tickPeriod);
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
     @Override
     public boolean start(Player player, Crate crate, Reward winReward) {
-        if (player == null || crate == null || winReward == null) {
+        if (player == null || !player.isOnline() || crate == null || winReward == null) {
             return false;
         }
 
-        if (isOpening(player)) {
-            MessageUtils.send(player, "<red>You are already opening a crate.</red>");
+        UUID playerId = player.getUniqueId();
+        if (sessions.containsKey(playerId)) {
             return false;
         }
 
-        if (crate.getRewards() == null || crate.getRewards().isEmpty()) {
-            MessageUtils.send(player, "<red>This crate has no rewards configured.</red>");
-            return false;
-        }
-
-        Inventory inventory = Bukkit.createInventory(
-                null,
-                INVENTORY_SIZE,
-                MessageUtils.parse("<gold><b>Opening: </b></gold><yellow>" + safeId(crate.getId())));
-
+        Inventory inventory = Bukkit.createInventory(null, INVENTORY_SIZE,
+                MessageUtils.parse("<gradient:gold:yellow><b>Abriendo:</b></gradient> " + safeId(crate.getId())));
         setupFrame(inventory);
-        player.openInventory(inventory);
 
-        Session session = new Session(player.getUniqueId(), inventory, crate, winReward);
-        sessions.put(player.getUniqueId(), session);
+        Session session = new Session(playerId, inventory, crate, winReward);
+        sessions.put(playerId, session);
+
+        player.openInventory(inventory);
         session.start();
         return true;
     }
@@ -87,45 +77,35 @@ public class RouletteAnimation implements CrateAnimation, Listener {
         return player != null && sessions.containsKey(player.getUniqueId());
     }
 
+    public void grantReward(Player player, Reward reward) {
+        if (player == null || !player.isOnline() || reward == null) return;
+        dispatchRewardCommands(player, reward);
+    }
+
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player player)) {
-            return;
-        }
+        if (!(event.getWhoClicked() instanceof Player player)) return;
         Session session = sessions.get(player.getUniqueId());
-        if (session == null) {
-            return;
-        }
-        if (event.getView().getTopInventory().equals(session.inventory)) {
+        if (session != null && event.getView().getTopInventory().equals(session.inventory)) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent event) {
-        if (!(event.getWhoClicked() instanceof Player player)) {
-            return;
-        }
+        if (!(event.getWhoClicked() instanceof Player player)) return;
         Session session = sessions.get(player.getUniqueId());
-        if (session == null) {
-            return;
-        }
-        if (event.getView().getTopInventory().equals(session.inventory)) {
+        if (session != null && event.getView().getTopInventory().equals(session.inventory)) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
-        if (!(event.getPlayer() instanceof Player player)) {
-            return;
-        }
+        if (!(event.getPlayer() instanceof Player player)) return;
         Session session = sessions.get(player.getUniqueId());
-        if (session == null || session.finishing) {
-            return;
-        }
+        if (session == null || session.finishing) return;
         if (event.getInventory().equals(session.inventory)) {
-            // If the player closes early, finish immediately and grant reward safely.
             session.finish(true);
         }
     }
@@ -163,7 +143,7 @@ public class RouletteAnimation implements CrateAnimation, Listener {
         ItemStack marker = new ItemStack(Material.LIGHT_BLUE_STAINED_GLASS_PANE);
         ItemMeta meta = marker.getItemMeta();
         if (meta != null) {
-            meta.displayName(MessageUtils.parse("<aqua><b>WIN SLOT</b></aqua>"));
+            meta.displayName(MessageUtils.parse("<aqua><b>PREMIO GANADOR</b></aqua>"));
             marker.setItemMeta(meta);
         }
         return marker;
@@ -176,23 +156,24 @@ public class RouletteAnimation implements CrateAnimation, Listener {
     }
 
     private void dispatchRewardCommands(Player player, Reward reward) {
-        List<String> commands = reward.getCommands();
-        if (commands == null || commands.isEmpty()) {
-            giveRewardItem(player, reward.getDisplayItem().clone());
-            MessageUtils.send(player, "<green>You won a reward item.");
-            return;
+        // 1. Direct Item Delivery (Slimefun or Vanilla)
+        ItemStack rewardItem = reward.createRewardItem();
+        if (rewardItem != null && !rewardItem.getType().isAir()) {
+            giveRewardItem(player, rewardItem);
         }
 
-        for (String rawCommand : commands) {
-            try {
-                if (rawCommand == null || rawCommand.isBlank()) {
-                    continue;
+        // 2. Extra Commands Execution
+        List<String> commands = reward.getCommands();
+        if (commands != null && !commands.isEmpty()) {
+            for (String rawCommand : commands) {
+                try {
+                    if (rawCommand == null || rawCommand.isBlank()) continue;
+                    String command = rawCommand.replace("%player%", player.getName());
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+                } catch (Exception ex) {
+                    plugin.getLogger().log(Level.WARNING,
+                            "Failed to run reward command '" + rawCommand + "' for player '" + player.getName() + "'.", ex);
                 }
-                String command = rawCommand.replace("%player%", player.getName());
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
-            } catch (Exception ex) {
-                plugin.getLogger().log(Level.WARNING,
-                        "Failed to run reward command '" + rawCommand + "' for player '" + player.getName() + "'.", ex);
             }
         }
     }
@@ -203,12 +184,10 @@ public class RouletteAnimation implements CrateAnimation, Listener {
 
     private void giveRewardItem(Player player, ItemStack item) {
         Map<Integer, ItemStack> leftovers = player.getInventory().addItem(item);
-        if (leftovers.isEmpty()) {
-            return;
-        }
+        if (leftovers.isEmpty()) return;
 
         leftovers.values().forEach(leftover -> player.getWorld().dropItemNaturally(player.getLocation(), leftover));
-        MessageUtils.send(player, "<yellow>Your inventory was full, so part of the reward was dropped at your feet.</yellow>");
+        MessageUtils.send(player, "<yellow>Tu inventario estaba lleno, parte de la recompensa cayó a tus pies.</yellow>");
     }
 
     private final class Session {
@@ -276,28 +255,23 @@ public class RouletteAnimation implements CrateAnimation, Listener {
         }
 
         private void finish(boolean grantReward) {
-            if (finishing) {
-                return;
-            }
+            if (finishing) return;
             finishing = true;
             cancelTask();
 
             sessions.remove(playerId);
 
             Player player = Bukkit.getPlayer(playerId);
-            if (player == null || !player.isOnline()) {
-                return;
-            }
+            if (player == null || !player.isOnline()) return;
 
             if (grantReward) {
                 try {
                     dispatchRewardCommands(player, winReward);
-                    MessageUtils.send(player, "<gold><b>Winner:</b></gold> <yellow>" + safeId(winReward.getId()));
+                    MessageUtils.send(player, "<gold>✦ <b>¡Ganador!</b> Recompensa: <yellow>" + safeId(winReward.getId()) + "</yellow></gold>");
                     player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0F, 1.2F);
                 } catch (Exception ex) {
                     plugin.getLogger().log(Level.WARNING,
-                            "Failed to grant reward '" + safeId(winReward.getId()) + "' to " + player.getName() + ".",
-                            ex);
+                            "Failed to grant reward '" + safeId(winReward.getId()) + "' to " + player.getName() + ".", ex);
                 }
             }
 

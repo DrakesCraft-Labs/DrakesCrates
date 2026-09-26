@@ -1,5 +1,6 @@
 package me.jackstar.drakescrates.application.usecases;
 
+import me.jackstar.drakescrates.domain.modality.ModalityManager;
 import me.jackstar.drakescrates.domain.models.Crate;
 import me.jackstar.drakescrates.domain.models.CrateType;
 import me.jackstar.drakescrates.domain.models.OpenResult;
@@ -12,27 +13,38 @@ import java.util.Random;
 
 public class OpenCrateUseCase {
 
+    private final ModalityManager modalityManager;
     private final Random random = new Random();
 
+    public OpenCrateUseCase(ModalityManager modalityManager) {
+        this.modalityManager = modalityManager;
+    }
+
     public OpenResult execute(Player player, Crate crate, ItemStack keyItem) {
-        // 1. Validate Key if Physical
-        if (crate.getType() == CrateType.PHYSICAL_KEY) {
-            if (keyItem == null || keyItem.getAmount() < 1) {
-                return OpenResult.failure("You need a key to open this crate!");
-            }
-            // Basic check, in reality we'd check NBT/PersistentDataContainer
-            // For now, let's assume the passed keyItem IS the valid key if the caller says
-            // so
-            // In a real implementation, we would compare usage against a KeyRepository
+        // 1. Modality & Vanilla Guard Validation
+        if (modalityManager != null && !modalityManager.canOpenCrate(player, crate)) {
+            return OpenResult.failure("Esta crate no está permitida en tu modalidad actual (Clásico es 100% vainilla).");
         }
 
-        // 2. Select Reward (Weighted Random)
+        // 2. Validate Key if Physical
+        if (crate.getType() == CrateType.PHYSICAL_KEY && keyItem != null) {
+            if (keyItem.getAmount() < 1) {
+                return OpenResult.failure("¡Necesitas una llave para abrir esta crate!");
+            }
+        }
+
+        // 3. Select Reward (Weighted Random)
         Reward reward = selectReward(crate.getRewards());
         if (reward == null) {
             return OpenResult.failure("No reward selected (Configuration error?)");
         }
 
-        // 3. Return Success (Caller handles giving item/commands)
+        // 4. Clásico failsafe: If player is in Clásico and reward is Slimefun, block delivery
+        if (modalityManager != null && modalityManager.isClasico(player) && reward.isSlimefun()) {
+            return OpenResult.failure("¡Error de seguridad! No se pueden entregar recompensas de Slimefun en Clásico.");
+        }
+
+        // 5. Return Success
         return OpenResult.success(reward);
     }
 

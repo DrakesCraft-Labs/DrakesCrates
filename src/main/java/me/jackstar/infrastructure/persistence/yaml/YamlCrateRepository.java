@@ -2,7 +2,9 @@ package me.jackstar.drakescrates.infrastructure.persistence.yaml;
 
 import me.jackstar.drakescraft.utils.MessageUtils;
 import me.jackstar.drakescrates.application.repositories.CrateRepository;
+import me.jackstar.drakescrates.compat.SlimefunHook;
 import me.jackstar.drakescrates.domain.models.Crate;
+import me.jackstar.drakescrates.domain.models.CrateModality;
 import me.jackstar.drakescrates.domain.models.CrateType;
 import me.jackstar.drakescrates.domain.models.Key;
 import me.jackstar.drakescrates.domain.models.Reward;
@@ -35,7 +37,6 @@ public class YamlCrateRepository implements CrateRepository {
     private static final String FILE_NAME = "crates.yml";
 
     private final JavaPlugin plugin;
-
     private final Map<String, Crate> crates = new LinkedHashMap<>();
     private final Map<String, Key> keys = new LinkedHashMap<>();
     private final Map<String, String> requiredKeyByCrate = new HashMap<>();
@@ -136,24 +137,16 @@ public class YamlCrateRepository implements CrateRepository {
         try {
             YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
             ConfigurationSection cratesSection = config.getConfigurationSection("crates");
-            if (cratesSection == null) {
-                return false;
-            }
+            if (cratesSection == null) return false;
 
             String rawCrateKey = findRawKeyByNormalizedId(cratesSection, normalizedCrateId);
-            if (rawCrateKey == null) {
-                return false;
-            }
+            if (rawCrateKey == null) return false;
 
             ConfigurationSection rewardsSection = config.getConfigurationSection("crates." + rawCrateKey + ".rewards");
-            if (rewardsSection == null) {
-                return false;
-            }
+            if (rewardsSection == null) return false;
 
             String rawRewardKey = findRawKeyByNormalizedId(rewardsSection, normalizedRewardId);
-            if (rawRewardKey == null) {
-                return false;
-            }
+            if (rawRewardKey == null) return false;
 
             config.set("crates." + rawCrateKey + ".rewards." + rawRewardKey + ".chance", newChance);
             config.save(file);
@@ -161,8 +154,7 @@ public class YamlCrateRepository implements CrateRepository {
             return true;
         } catch (Exception ex) {
             plugin.getLogger().log(Level.WARNING,
-                    "Failed to update reward chance for crate '" + crateId + "', reward '" + rewardId + "'.",
-                    ex);
+                    "Failed to update reward chance for crate '" + crateId + "', reward '" + rewardId + "'.", ex);
             return false;
         }
     }
@@ -177,10 +169,7 @@ public class YamlCrateRepository implements CrateRepository {
             final String keyId = normalizeId(rawKeyId);
             try {
                 ConfigurationSection keySection = keysSection.getConfigurationSection(rawKeyId);
-                if (keySection == null) {
-                    plugin.getLogger().warning("Invalid key section: " + rawKeyId);
-                    continue;
-                }
+                if (keySection == null) continue;
 
                 String displayName = keySection.getString("display-name", "<yellow>" + rawKeyId);
                 ConfigurationSection itemSection = keySection.getConfigurationSection("item");
@@ -204,13 +193,12 @@ public class YamlCrateRepository implements CrateRepository {
             final String crateId = normalizeId(rawCrateId);
             try {
                 ConfigurationSection crateSection = cratesSection.getConfigurationSection(rawCrateId);
-                if (crateSection == null) {
-                    plugin.getLogger().warning("Invalid crate section: " + rawCrateId);
-                    continue;
-                }
+                if (crateSection == null) continue;
 
                 String displayName = crateSection.getString("display-name", "<gold>" + rawCrateId);
                 CrateType type = parseCrateType(crateSection.getString("type", "FREE"), rawCrateId);
+                CrateModality modality = CrateModality.fromString(crateSection.getString("modality", "ALL"));
+
                 ItemStack previewItem = parseItem(crateSection.getConfigurationSection("preview-item"),
                         "crates." + rawCrateId + ".preview-item");
 
@@ -222,16 +210,16 @@ public class YamlCrateRepository implements CrateRepository {
 
                 List<Location> locations = parseLocations(crateSection.getStringList("locations"), rawCrateId);
                 String requiredKeyId = null;
-                if (type == CrateType.PHYSICAL_KEY) {
+                if (type != CrateType.FREE) {
                     requiredKeyId = normalizeId(crateSection.getString("key-id"));
                     if (requiredKeyId == null || !keys.containsKey(requiredKeyId)) {
                         plugin.getLogger().warning(
-                                "Crate '" + rawCrateId + "' requires PHYSICAL_KEY but key-id is missing or invalid.");
+                                "Crate '" + rawCrateId + "' requires a key but key-id is missing or invalid.");
                         continue;
                     }
                 }
 
-                Crate crate = new Crate(crateId, MessageUtils.parse(displayName), type, rewards, previewItem, locations);
+                Crate crate = new Crate(crateId, MessageUtils.parse(displayName), type, rewards, previewItem, locations, modality);
                 crates.put(crateId, crate);
                 if (requiredKeyId != null) {
                     requiredKeyByCrate.put(crateId, requiredKeyId);
@@ -243,37 +231,44 @@ public class YamlCrateRepository implements CrateRepository {
     }
 
     private List<Reward> parseRewards(ConfigurationSection rewardsSection, String crateId) {
-        if (rewardsSection == null) {
-            return Collections.emptyList();
-        }
+        if (rewardsSection == null) return Collections.emptyList();
 
         List<Reward> rewards = new ArrayList<>();
         for (String rawRewardId : rewardsSection.getKeys(false)) {
             try {
                 ConfigurationSection rewardSection = rewardsSection.getConfigurationSection(rawRewardId);
-                if (rewardSection == null) {
-                    plugin.getLogger().warning("Invalid reward section: crates." + crateId + ".rewards." + rawRewardId);
-                    continue;
-                }
+                if (rewardSection == null) continue;
 
                 double chance = rewardSection.getDouble("chance", 0.0D);
-                if (chance <= 0.0D) {
-                    plugin.getLogger().warning("Reward '" + rawRewardId + "' in crate '" + crateId
-                            + "' has non-positive chance. Skipping.");
-                    continue;
-                }
+                if (chance <= 0.0D) continue;
 
                 String displayName = rewardSection.getString("display-name", "<green>" + rawRewardId);
                 List<String> commands = rewardSection.getStringList("commands");
-                ItemStack displayItem = parseItem(rewardSection.getConfigurationSection("display-item"),
-                        "crates." + crateId + ".rewards." + rawRewardId + ".display-item");
+                String slimefunId = rewardSection.getString("slimefun-id", rewardSection.getString("sf-item"));
+                boolean isVanilla = rewardSection.getBoolean("vanilla", slimefunId == null);
+                int amount = Math.max(1, rewardSection.getInt("amount", 1));
+
+                ItemStack displayItem = null;
+                if (rewardSection.contains("display-item")) {
+                    displayItem = parseItem(rewardSection.getConfigurationSection("display-item"),
+                            "crates." + crateId + ".rewards." + rawRewardId + ".display-item");
+                } else if (slimefunId != null) {
+                    displayItem = SlimefunHook.getSlimefunItem(slimefunId, amount);
+                }
+
+                if (displayItem == null) {
+                    displayItem = new ItemStack(Material.CHEST, amount);
+                }
 
                 Reward reward = new Reward(
                         normalizeId(rawRewardId),
                         MessageUtils.parse(displayName),
                         chance,
                         commands,
-                        displayItem);
+                        displayItem,
+                        slimefunId,
+                        isVanilla,
+                        amount);
                 rewards.add(reward);
             } catch (Exception ex) {
                 plugin.getLogger().log(Level.WARNING,
@@ -292,16 +287,10 @@ public class YamlCrateRepository implements CrateRepository {
         for (String rawLocation : serializedLocations) {
             try {
                 String[] parts = rawLocation.split(",");
-                if (parts.length < 4) {
-                    plugin.getLogger().warning("Invalid location for crate '" + crateId + "': " + rawLocation);
-                    continue;
-                }
+                if (parts.length < 4) continue;
 
                 String worldName = parts[0].trim();
-                if (Bukkit.getWorld(worldName) == null) {
-                    plugin.getLogger().warning("Unknown world '" + worldName + "' for crate '" + crateId + "'.");
-                    continue;
-                }
+                if (Bukkit.getWorld(worldName) == null) continue;
 
                 double x = Double.parseDouble(parts[1].trim());
                 double y = Double.parseDouble(parts[2].trim());
@@ -322,30 +311,21 @@ public class YamlCrateRepository implements CrateRepository {
         try {
             return CrateType.valueOf(rawType.toUpperCase(Locale.ROOT));
         } catch (Exception ex) {
-            plugin.getLogger().warning(
-                    "Invalid crate type '" + rawType + "' for crate '" + crateId + "'. Defaulting to FREE.");
             return CrateType.FREE;
         }
     }
 
     private ItemStack parseItem(ConfigurationSection itemSection, String path) {
-        if (itemSection == null) {
-            return new ItemStack(Material.CHEST);
-        }
+        if (itemSection == null) return new ItemStack(Material.CHEST);
 
         String materialName = itemSection.getString("material", "STONE");
         Material material = Material.matchMaterial(materialName);
-        if (material == null) {
-            plugin.getLogger().warning("Invalid material '" + materialName + "' at " + path + ". Using BARRIER.");
-            material = Material.BARRIER;
-        }
+        if (material == null) material = Material.BARRIER;
 
         int amount = Math.max(1, itemSection.getInt("amount", 1));
         ItemStack item = new ItemStack(material, amount);
         ItemMeta meta = item.getItemMeta();
-        if (meta == null) {
-            return item;
-        }
+        if (meta == null) return item;
 
         String name = itemSection.getString("name");
         if (name != null && !name.isBlank()) {
@@ -366,11 +346,9 @@ public class YamlCrateRepository implements CrateRepository {
             for (String rawEnchant : enchantSection.getKeys(false)) {
                 int level = enchantSection.getInt(rawEnchant, 1);
                 Enchantment enchantment = parseEnchantment(rawEnchant);
-                if (enchantment == null) {
-                    plugin.getLogger().warning("Unknown enchantment '" + rawEnchant + "' at " + path + ".");
-                    continue;
+                if (enchantment != null) {
+                    meta.addEnchant(enchantment, Math.max(level, 1), true);
                 }
-                meta.addEnchant(enchantment, Math.max(level, 1), true);
             }
         }
 
@@ -384,16 +362,12 @@ public class YamlCrateRepository implements CrateRepository {
 
     private Enchantment parseEnchantment(String rawName) {
         Enchantment byName = Enchantment.getByName(rawName.toUpperCase(Locale.ROOT));
-        if (byName != null) {
-            return byName;
-        }
+        if (byName != null) return byName;
 
         NamespacedKey direct = NamespacedKey.fromString(rawName.toLowerCase(Locale.ROOT));
         if (direct != null) {
             Enchantment byDirectKey = Enchantment.getByKey(direct);
-            if (byDirectKey != null) {
-                return byDirectKey;
-            }
+            if (byDirectKey != null) return byDirectKey;
         }
 
         NamespacedKey minecraftKey = NamespacedKey.minecraft(rawName.toLowerCase(Locale.ROOT));
@@ -406,9 +380,7 @@ public class YamlCrateRepository implements CrateRepository {
         }
 
         File cratesFile = new File(plugin.getDataFolder(), FILE_NAME);
-        if (cratesFile.exists()) {
-            return;
-        }
+        if (cratesFile.exists()) return;
 
         try {
             plugin.saveResource(FILE_NAME, false);
@@ -424,9 +396,7 @@ public class YamlCrateRepository implements CrateRepository {
     }
 
     private String normalizeId(String id) {
-        if (id == null) {
-            return null;
-        }
+        if (id == null) return null;
         String normalized = id.trim().toLowerCase(Locale.ROOT);
         return normalized.isEmpty() ? null : normalized;
     }
@@ -443,9 +413,7 @@ public class YamlCrateRepository implements CrateRepository {
 
     private String findRawKeyByNormalizedId(ConfigurationSection section, String normalizedId) {
         for (String key : section.getKeys(false)) {
-            if (normalizedId.equals(normalizeId(key))) {
-                return key;
-            }
+            if (normalizedId.equals(normalizeId(key))) return key;
         }
         return null;
     }
