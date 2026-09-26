@@ -8,13 +8,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class ItemBuilder {
 
-    private final ItemStack item;
-    private final ItemMeta meta;
+    private ItemStack item;
+    private ItemMeta meta;
 
     public ItemBuilder(Material material) {
         this.item = new ItemStack(material);
@@ -22,13 +21,37 @@ public class ItemBuilder {
     }
 
     public ItemBuilder(Material material, int amount) {
-        this.item = new ItemStack(material, amount);
+        this.item = new ItemStack(material, Math.max(1, amount));
         this.meta = item.getItemMeta();
+    }
+
+    public ItemBuilder(ItemStack item) {
+        this.item = item != null ? item.clone() : new ItemStack(Material.STONE);
+        this.meta = this.item.getItemMeta();
+    }
+
+    public ItemBuilder type(Material material) {
+        if (material != null) {
+            ItemStack newItem = new ItemStack(material, item != null ? item.getAmount() : 1);
+            if (meta != null) {
+                newItem.setItemMeta(meta);
+            }
+            this.item = newItem;
+            this.meta = this.item.getItemMeta();
+        }
+        return this;
     }
 
     public ItemBuilder name(String name) {
         if (meta != null) {
             meta.displayName(MessageUtils.parse(name));
+        }
+        return this;
+    }
+
+    public ItemBuilder name(Component component) {
+        if (meta != null && component != null) {
+            meta.displayName(component);
         }
         return this;
     }

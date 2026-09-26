@@ -1,87 +1,209 @@
-# DrakesCrates main config.
-# This file defines keys, crates, locations, and rewards.
-# [DANGER] If you change IDs (key/crate/reward), update commands and integrations.
-# [DANGER] Reward chances <= 0 effectively disable the reward.
+# ==============================================================
+#            DRAKESCRATES - CONFIGURACIÓN DE CRATES
+# ==============================================================
+# Separadas por modalidad:
+#   modality: ALL       -> Accesible en todas las modalidades (solo vainilla).
+#   modality: CLASICO   -> Exclusiva para la modalidad Clásico (100% Vainilla).
+#   modality: SLIMEFUN  -> Contiene ítems de Slimefun. ¡BLOQUEADA EN CLÁSICO!
+# ==============================================================
 
 keys:
-  basic_key:
-    # Visible key name (MiniMessage).
-    display-name: "<gold><b>Basic Key</b></gold>"
+  comun_key:
+    display-name: "<gradient:gold:yellow><b>Llave Común</b></gradient>"
     item:
-      # Material for the physical key item.
       material: TRIPWIRE_HOOK
       amount: 1
-      name: "<yellow>Basic Key"
+      name: "<yellow><b>Llave Común</b></yellow>"
       lore:
-        - "<gray>Use this key to open"
-        - "<gray>the Basic Crate."
+        - "<gray>Úsala para abrir la Crate Común."
+        - "<aqua>Compatible físicamente o virtualmente."
       enchantments:
         unbreaking: 1
-      # Optional model for resource packs.
       custom-model-data: 1001
 
+  clasico_key:
+    display-name: "<gradient:green:dark_green><b>Llave de Clásico</b></gradient>"
+    item:
+      material: EMERALD
+      amount: 1
+      name: "<green><b>Llave Vainilla Clásico</b></green>"
+      lore:
+        - "<gray>Llave exclusiva para el mundo Clásico."
+        - "<gray>100% compatible con el modo puro."
+      enchantments:
+        unbreaking: 3
+      custom-model-data: 1002
+
+  sf_tech_key:
+    display-name: "<gradient:#9b59b6:#8e44ad><b>Llave Tecnológica Slimefun</b></gradient>"
+    item:
+      material: AMETHYST_SHARD
+      amount: 1
+      name: "<light_purple><b>Llave Tecnológica SF</b></light_purple>"
+      lore:
+        - "<gray>Desbloquea maquinaria y componentes Slimefun."
+        - "<red>⚠ Prohibida en la modalidad Clásico."
+      enchantments:
+        unbreaking: 2
+      custom-model-data: 1003
+
 crates:
+  # Crate Global (Vainilla para todos los mundos)
   basic:
-    # Crate display name used in UIs and messages.
-    display-name: "<gradient:gold:yellow><b>Basic Crate</b></gradient>"
-
-    # Crate access mode: PHYSICAL_KEY, VIRTUAL_KEY, FREE.
+    display-name: "<gradient:gold:yellow><b>Crate Común</b></gradient>"
+    modality: ALL
     type: PHYSICAL_KEY
-
-    # Required key id when type = PHYSICAL_KEY.
-    key-id: basic_key
-
-    # Item used in selector/editor and crate references.
+    key-id: comun_key
     preview-item:
       material: CHEST
       amount: 1
-      name: "<gold>Basic Crate"
+      name: "<gold><b>Crate Común</b></gold>"
       lore:
-        - "<gray>Contains common rewards."
-
+        - "<gray>Recompensas globales y esenciales."
+        - "<green>[100% VAINILLA]</green>"
     locations:
-      # Format: world,x,y,z[,yaw,pitch]
-      # [DANGER] Invalid world name = crate unusable at runtime.
       - "world,0,64,0"
-
     rewards:
       coins:
-        display-name: "<yellow>Coins Reward"
-        # Win chance in percentage-like weight.
-        # [DANGER] Keep total distribution balanced for economy health.
-        chance: 60.0
+        display-name: "<yellow>250 Dragmas / Monedas"
+        chance: 50.0
         commands:
           - "eco give %player% 250"
         display-item:
           material: GOLD_NUGGET
           amount: 8
-          name: "<yellow>250 Coins"
+          name: "<yellow>250 Monedas"
           lore:
-            - "<gray>Common economy reward."
-
-      diamond_pack:
-        display-name: "<aqua>Diamond Pack"
+            - "<gray>Recompensa económica común."
+      iron_pack:
+        display-name: "<white>Pack de Hierro (16x)"
         chance: 35.0
-        commands:
-          - "give %player% diamond 5"
+        vanilla: true
+        amount: 16
+        display-item:
+          material: IRON_INGOT
+          amount: 16
+          name: "<white>16x Lingotes de Hierro"
+      diamond_pack:
+        display-name: "<aqua>Diamantes Puros (5x)"
+        chance: 15.0
+        vanilla: true
+        amount: 5
         display-item:
           material: DIAMOND
           amount: 5
-          name: "<aqua>Diamond Pack"
-          lore:
-            - "<gray>Useful crafting reward."
+          name: "<aqua>5x Diamantes"
 
-      legendary_pickaxe:
-        display-name: "<rainbow>Legendary Pickaxe"
-        chance: 5.0
-        commands:
-          - "give %player% netherite_pickaxe 1"
+  # Crate Exclusiva Clásico (100% Vainilla, minerales y tesoros tradicionales)
+  clasico_tesoro:
+    display-name: "<gradient:green:dark_green><b>Crate del Explorador Clásico</b></gradient>"
+    modality: CLASICO
+    type: PHYSICAL_KEY
+    key-id: clasico_key
+    preview-item:
+      material: BARREL
+      amount: 1
+      name: "<green><b>Crate del Explorador</b></green>"
+      lore:
+        - "<gray>Diseñada especialmente para Clásico."
+        - "<green>[100% VAINILLA]</green>"
+    rewards:
+      lingote_netherite:
+        display-name: "<dark_gray>Lingote de Inframundita"
+        chance: 10.0
+        vanilla: true
+        amount: 1
         display-item:
-          material: NETHERITE_PICKAXE
+          material: NETHERITE_INGOT
           amount: 1
-          name: "<rainbow>Legendary Pickaxe"
+          name: "<dark_gray><b>Lingote de Netherite</b></dark_gray>"
+      manzana_dorada_notcha:
+        display-name: "<gold>Manzana Dorada Encantada"
+        chance: 15.0
+        vanilla: true
+        amount: 2
+        display-item:
+          material: ENCHANTED_GOLDEN_APPLE
+          amount: 2
+          name: "<gold><b>Manzana Encantada</b></gold>"
+      diamantes_bloques:
+        display-name: "<aqua>Bloques de Diamante (4x)"
+        chance: 30.0
+        vanilla: true
+        amount: 4
+        display-item:
+          material: DIAMOND_BLOCK
+          amount: 4
+          name: "<aqua>4x Bloques de Diamante"
+      totem:
+        display-name: "<yellow>Tótem de la Inmortalidad"
+        chance: 20.0
+        vanilla: true
+        amount: 1
+        display-item:
+          material: TOTEM_OF_UNDYING
+          amount: 1
+          name: "<yellow>Tótem de la Inmortalidad"
+      dragmas_clasico:
+        display-name: "<gold>Bolsa de 1,000 Dragmas"
+        chance: 25.0
+        commands:
+          - "eco give %player% 1000"
+        display-item:
+          material: GOLD_INGOT
+          amount: 10
+          name: "<gold>1,000 Dragmas"
+
+  # Crate Slimefun Tecnológica (¡BLOQUEADA ESTRICTAMENTE EN CLÁSICO!)
+  sf_tecnologia:
+    display-name: "<gradient:#9b59b6:#8e44ad><b>Crate Tecnológica Slimefun</b></gradient>"
+    modality: SLIMEFUN
+    type: PHYSICAL_KEY
+    key-id: sf_tech_key
+    preview-item:
+      material: DAYLIGHT_DETECTOR
+      amount: 1
+      name: "<light_purple><b>Crate Tecnológica SF</b></light_purple>"
+      lore:
+        - "<gray>Componentes y paneles de Slimefun."
+        - "<light_purple>[SLIMEFUN & TECH]</light_purple>"
+        - "<red>Bloqueada en el mundo Clásico.</red>"
+    rewards:
+      panel_solar:
+        display-name: "<gold>Panel Solar Slimefun"
+        chance: 15.0
+        slimefun-id: "SOLAR_GENERATOR"
+        amount: 1
+        display-item:
+          material: DAYLIGHT_DETECTOR
+          amount: 1
+          name: "<gold>Panel Solar (Slimefun)"
           lore:
-            - "<gray>Rare jackpot reward."
-          enchantments:
-            EFFICIENCY: 5
-            UNBREAKING: 3
+            - "<gray>Generador de energía solar."
+      carbon_chunk:
+        display-name: "<dark_gray>Trozo de Carbono (Carbon Chunk)"
+        chance: 35.0
+        slimefun-id: "CARBON_CHUNK"
+        amount: 4
+        display-item:
+          material: COAL
+          amount: 4
+          name: "<dark_gray>Carbon Chunk (SF)"
+      electric_motor:
+        display-name: "<blue>Motor Eléctrico Slimefun"
+        chance: 25.0
+        slimefun-id: "ELECTRIC_MOTOR"
+        amount: 2
+        display-item:
+          material: PISTON
+          amount: 2
+          name: "<blue>Electric Motor"
+      gold_24k:
+        display-name: "<yellow>Oro de 24 Quilates (4x)"
+        chance: 25.0
+        slimefun-id: "GOLD_24K"
+        amount: 4
+        display-item:
+          material: GOLD_INGOT
+          amount: 4
+          name: "<yellow>Oro 24K (SF)"

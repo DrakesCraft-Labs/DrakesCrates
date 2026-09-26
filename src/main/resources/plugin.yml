@@ -1,21 +1,28 @@
 name: DrakesCrates
-version: 1.0
+version: 2.0
 main: me.jackstar.drakescrates.DrakesCratesPlugin
 api-version: '1.20'
 authors: [JackStar]
-description: Crates system for DrakesCraft
-softdepend: [PlaceholderAPI, Votifier, VotifierPlus]
+description: Virtual & Physical Crates system with Slimefun support and Clásico (Vanilla) guard for DrakesCraft.
+softdepend: [PlaceholderAPI, Votifier, VotifierPlus, Slimefun, Slimefun4, Slimefun4-Drake]
 commands:
+  crates:
+    description: Abre el menú de crates virtuales y consulta tus llaves
+    usage: /crates [balance]
+    aliases: [crate, c, cratesmenu]
   oraculo:
     description: Abre El Oraculo y los Relicarios del Olimpo
     usage: /oraculo [givekey|takekey|setpity|reclamar|reload]
-    aliases: [relicarios, crates]
+    aliases: [relicarios, oraculos]
   drakescrates:
-    description: Admin command for DrakesCrates
-    usage: /drakescrates <givekey|editor|reload>
+    description: Comando de administración de DrakesCrates
+    usage: /drakescrates <givekey|givevirtualkey|takekey|balance|editor|reload>
     permission: drakescrates.admin
-    aliases: [dcrate, dcrates, drcrate]
+    aliases: [dcrate, dcrates, drcrate, dc]
 permissions:
+  drakescrates.use:
+    description: Permite abrir el menú de crates virtuales
+    default: true
   drakescrates.admin:
-    description: Allows use of DrakesCrates admin command
+    description: Acceso a comandos administrativos de DrakesCrates
     default: op
