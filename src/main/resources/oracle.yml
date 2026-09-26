@@ -47,6 +47,13 @@ key-sources:
     enabled: true
     relicary: hercules
     keys: 1
+    money: 500
+    xp: 500
+    golden-carrots: 16
+    sf-dust-amount: 4
+    commands:
+      - "crate key give %player% votek 1"
+    broadcast: "&6[Votos] &e%player% &aha votado en &b%service% &ay recibió &6$500 Dragmas&a, &e500 XP&a, &616 Zanahorias Doradas&a, Polvo Slimefun y llaves!"
   bosses:
     enabled: true
     # entidades cuyo nombre visible contiene alguna de estas palabras (jefes de DrakesBosses/MultiverseCreatures)

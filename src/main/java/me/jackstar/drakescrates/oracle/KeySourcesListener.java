@@ -79,6 +79,11 @@ public final class KeySourcesListener implements Listener {
         }
     }
 
+    private static final String[] SF_DUSTS = {
+        "COPPER_DUST", "TIN_DUST", "SILVER_DUST", "GOLD_DUST",
+        "LEAD_DUST", "ALUMINUM_DUST", "ZINC_DUST", "MAGNESIUM_DUST", "IRON_DUST"
+    };
+
     private void onVote(String username, String servicio) {
         ConfigurationSection s = sources();
         if (s == null) return;
@@ -93,13 +98,48 @@ public final class KeySourcesListener implements Listener {
             service.give(target.getUniqueId(), relicary, amount);
         } catch (RuntimeException e) {
             plugin.getLogger().warning("[Oraculo] no pude dar llave por voto a " + username + ": " + e.getMessage());
-            return;
         }
-        plugin.getLogger().info("[Oraculo] +" + amount + " llave(s) " + relicary + " a " + username + " por votar en " + servicio);
+
+        int money = s.getInt("votes.money", 500);
+        int xp = s.getInt("votes.xp", 500);
+        int carrots = s.getInt("votes.golden-carrots", 16);
+        int sfDustAmount = s.getInt("votes.sf-dust-amount", 4);
+        String randomDust = SF_DUSTS[java.util.concurrent.ThreadLocalRandom.current().nextInt(SF_DUSTS.length)];
+
+        if (money > 0) {
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "eco give " + username + " " + money);
+        }
+        if (xp > 0) {
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "exp give " + username + " " + xp);
+        }
+        if (carrots > 0) {
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "give " + username + " golden_carrot " + carrots);
+        }
+        if (sfDustAmount > 0) {
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "sf give " + username + " " + randomDust + " " + sfDustAmount);
+        }
+
+        List<String> extraCommands = s.getStringList("votes.commands");
+        if (extraCommands.isEmpty()) {
+            extraCommands = List.of("crate key give " + username + " votek 1");
+        }
+        for (String cmd : extraCommands) {
+            String resolved = cmd.replace("%player%", username).replace("%service%", servicio);
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), resolved);
+        }
+
+        String broadcast = s.getString("votes.broadcast",
+            "&6[Votos] &e" + username + " &aha votado en &b" + servicio + " &ay recibió &6$500 Dragmas&a, &e500 XP&a, &616 Zanahorias Doradas&a, Polvo Slimefun y llaves!");
+        if (broadcast != null && !broadcast.isBlank()) {
+            Bukkit.broadcastMessage(org.bukkit.ChatColor.translateAlternateColorCodes('&',
+                broadcast.replace("%player%", username).replace("%service%", servicio)));
+        }
+
+        plugin.getLogger().info("[Oraculo] +" + amount + " llave(s) " + relicary + " y recompensas completas a " + username + " por votar en " + servicio);
         Player online = target.getPlayer();
         if (online != null) {
-            online.sendMessage("§6[Oráculo] §a¡Gracias por votar en §e" + servicio + "§a! Recibiste §e" + amount
-                    + " §allave(s) del §e" + relicary + "§a. Ábrelo con §f/oraculo§a.");
+            online.sendMessage("§6[Oráculo] §a¡Gracias por votar en §e" + servicio + "§a! Recibiste tus recompensas de voto: §e" + amount
+                    + " §allave(s) del §e" + relicary + "§a, Llave de Crate, $500, XP, zanahorias doradas y polvo Slimefun.");
         }
     }
 
