@@ -6,8 +6,6 @@ import me.jackstar.drakescrates.domain.models.CrateModality;
 import me.jackstar.drakescrates.domain.models.CrateType;
 import me.jackstar.drakescrates.domain.models.Reward;
 import me.jackstar.drakescrates.infrastructure.persistence.sqlite.SqliteVirtualKeyRepository;
-import org.bukkit.Material;
-import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -57,10 +55,12 @@ public class ModalityAndVirtualCrateTest {
 
     @Test
     public void testCrateModalityDetection() {
-        Reward vanillaReward = new Reward("vanilla_iron", null, 50.0, List.of(), new ItemStack(Material.IRON_INGOT));
+        // Since Paper 1.21.x, new ItemStack(Material) needs the server item registry, which unit
+        // tests don't have. Modality detection relies on slimefun-id and commands, not the item.
+        Reward vanillaReward = new Reward("vanilla_iron", null, 50.0, List.of(), null);
         assertFalse(vanillaReward.isSlimefun(), "Vanilla reward should not be detected as Slimefun");
 
-        Reward sfReward = new Reward("sf_panel", null, 50.0, List.of(), new ItemStack(Material.DAYLIGHT_DETECTOR), "SOLAR_GENERATOR", false, 1);
+        Reward sfReward = new Reward("sf_panel", null, 50.0, List.of(), null, "SOLAR_GENERATOR", false, 1);
         assertTrue(sfReward.isSlimefun(), "Reward with slimefun-id must be detected as Slimefun");
 
         Crate clasicoCrate = new Crate("clasico_test", null, CrateType.PHYSICAL_KEY, List.of(vanillaReward), null, List.of(), CrateModality.CLASICO);

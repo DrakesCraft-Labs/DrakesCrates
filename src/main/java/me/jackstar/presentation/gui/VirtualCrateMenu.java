@@ -222,7 +222,7 @@ public class VirtualCrateMenu implements Listener {
                 .lore(lore.toArray(new String[0]));
 
         if (!allowed) {
-            builder.type(Material.CHAIN);
+            builder.type(Material.IRON_CHAIN);
         } else if (physicalKeys + virtualKeys > 0 || crate.getType() == CrateType.FREE) {
             builder.glowing();
         }
